@@ -4,13 +4,14 @@ import ArticleView from '@/components/ArticleView';
 import { notFound } from 'next/navigation';
 
 interface ArticlePageProps {
-    params: {
+    params: Promise<{
         id: string;
-    };
+    }>;
 }
 
 // Generate metadata for SEO and social sharing
-export async function generateMetadata({ params }: ArticlePageProps): Promise<Metadata> {
+export async function generateMetadata(props: ArticlePageProps): Promise<Metadata> {
+    const params = await props.params;
     const supabase = await createClient();
     const { data: article } = await supabase
         .from('articles')
@@ -57,7 +58,8 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
     };
 }
 
-export default async function ArticlePage({ params }: ArticlePageProps) {
+export default async function ArticlePage(props: ArticlePageProps) {
+    const params = await props.params;
     const supabase = await createClient();
     const { data: article, error } = await supabase
         .from('articles')

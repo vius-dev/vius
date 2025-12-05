@@ -5,13 +5,14 @@ import ProfileView from '@/components/ProfileView';
 import { getFollowStatus, getFollowCounts } from '../actions';
 
 interface ProfilePageProps {
-    params: {
+    params: Promise<{
         userId: string;
-    };
+    }>;
 }
 
-export async function generateMetadata({ params }: ProfilePageProps): Promise<Metadata> {
-    const { userId } = await params;
+export async function generateMetadata(props: ProfilePageProps): Promise<Metadata> {
+    const params = await props.params;
+    const { userId } = params;
     const supabase = await createClient();
     const { data: profile } = await supabase
         .from('profiles')
@@ -31,8 +32,9 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
     };
 }
 
-export default async function ProfilePage({ params }: ProfilePageProps) {
-    const { userId } = await params;
+export default async function ProfilePage(props: ProfilePageProps) {
+    const params = await props.params;
+    const { userId } = params;
     const supabase = await createClient();
     const { data: profile, error } = await supabase
         .from('profiles')

@@ -6,12 +6,13 @@ import { Tag } from 'lucide-react';
 import { Metadata } from 'next';
 
 interface TagPageProps {
-    params: {
+    params: Promise<{
         tag: string;
-    };
+    }>;
 }
 
-export async function generateMetadata({ params }: TagPageProps): Promise<Metadata> {
+export async function generateMetadata(props: TagPageProps): Promise<Metadata> {
+    const params = await props.params;
     const tagName = decodeURIComponent(params.tag);
 
     return {
@@ -20,7 +21,8 @@ export async function generateMetadata({ params }: TagPageProps): Promise<Metada
     };
 }
 
-export default async function TagPage({ params }: TagPageProps) {
+export default async function TagPage(props: TagPageProps) {
+    const params = await props.params;
     const tagName = decodeURIComponent(params.tag);
     const articles = await getArticlesByTag(tagName);
 

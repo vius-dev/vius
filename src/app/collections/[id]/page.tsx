@@ -6,7 +6,8 @@ import { Folder, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
-export default async function CollectionPage({ params }: { params: { id: string } }) {
+export default async function CollectionPage(props: { params: Promise<{ id: string }> }) {
+    const params = await props.params;
     const supabase = await createClient();
 
     const { data: collection, error: collectionError } = await supabase
