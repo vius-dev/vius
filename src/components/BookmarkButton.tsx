@@ -47,7 +47,7 @@ export default function BookmarkButton({
         .select('id')
         .eq('user_id', user.id)
         .eq('article_id', articleId)
-        .single();
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
         // PGRST116 is "not found" error, which is expected
@@ -83,7 +83,7 @@ export default function BookmarkButton({
 
       // data returns true if bookmarked, false if unbookmarked
       setIsBookmarked(data);
-      
+
       toast.success(data ? 'Article bookmarked' : 'Bookmark removed');
     } catch (error) {
       console.error('Error toggling bookmark:', error);
@@ -119,11 +119,11 @@ export default function BookmarkButton({
       )}
       title={isBookmarked ? 'Remove bookmark' : 'Bookmark article'}
     >
-      <Bookmark 
+      <Bookmark
         className={cn(
           'h-4 w-4 transition-all',
           isBookmarked && 'fill-current'
-        )} 
+        )}
       />
       {showLabel && (
         <span className="ml-2">

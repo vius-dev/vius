@@ -76,7 +76,7 @@ export async function uploadArticleImage(file: File, userId: string): Promise<{ 
 
         // Upload to Supabase Storage
         const { data, error } = await supabase.storage
-            .from('article-images')
+            .from('article_images')
             .upload(filePath, compressedFile, {
                 cacheControl: '3600',
                 upsert: false
@@ -86,7 +86,7 @@ export async function uploadArticleImage(file: File, userId: string): Promise<{ 
 
         // Get public URL
         const { data: { publicUrl } } = supabase.storage
-            .from('article-images')
+            .from('article_images')
             .getPublicUrl(data.path);
 
         return {
@@ -139,7 +139,7 @@ export async function uploadAvatar(file: File, userId: string): Promise<{ url: s
 /**
  * Delete image from Supabase Storage
  */
-export async function deleteImage(path: string, bucket: 'article-images' | 'avatars'): Promise<boolean> {
+export async function deleteImage(path: string, bucket: 'article_images' | 'avatars'): Promise<boolean> {
     try {
         const { error } = await supabase.storage
             .from(bucket)
