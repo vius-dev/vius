@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/lib/supabase';
 import { Article } from '@/types/article';
+import { stripHtmlTags } from '@/lib/stripHtmlTags';
 
 interface SearchBarProps {
     onArticleClick: (article: Article) => void;
@@ -206,7 +207,7 @@ export default function SearchBar({ onArticleClick }: SearchBarProps) {
                                                     {highlightText(article.title, query)}
                                                 </h4>
                                                 <p className="text-xs text-muted-foreground line-clamp-2">
-                                                    {highlightText(article.body.substring(0, 150), query)}...
+                                                    {highlightText(stripHtmlTags(article.body).substring(0, 150), query)}...
                                                 </p>
                                             </button>
                                         ))}

@@ -12,6 +12,7 @@ import { toggleArticleReaction } from '@/app/article/actions';
 import { toast } from 'sonner';
 import EditArticleModal from './EditArticleModal';
 import DeleteArticleDialog from './DeleteArticleDialog';
+import { truncateHtml } from '@/lib/stripHtmlTags';
 
 interface FeaturedArticleProps {
   article: Article;
@@ -138,7 +139,7 @@ export default function FeaturedArticle({ article, onClick }: FeaturedArticlePro
             {article.title}
           </h2>
           <p className="text-white/80 text-sm md:text-base line-clamp-2 mb-6 max-w-3xl">
-            {article.body.substring(0, 200)}...
+            {truncateHtml(article.body, 200)}
           </p>
 
           <div className="flex items-center justify-between text-xs sm:text-sm text-white/90 w-full">

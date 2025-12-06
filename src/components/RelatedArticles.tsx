@@ -7,6 +7,7 @@ import { Article } from '@/types/article';
 import { getRelatedArticles } from '@/app/article/actions';
 import { useRouter } from 'next/navigation';
 import { Sparkles, Clock } from 'lucide-react';
+import { truncateHtml } from '@/lib/stripHtmlTags';
 
 interface RelatedArticlesProps {
     articleId: string;
@@ -90,7 +91,7 @@ export default function RelatedArticles({ articleId }: RelatedArticlesProps) {
                                 {article.title}
                             </h3>
                             <p className="text-sm text-muted-foreground line-clamp-2">
-                                {article.body.substring(0, 120)}...
+                                {truncateHtml(article.body, 120)}
                             </p>
                         </div>
                     </div>

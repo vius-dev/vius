@@ -13,6 +13,7 @@ import EditArticleModal from './EditArticleModal';
 import DeleteArticleDialog from './DeleteArticleDialog';
 import { toggleArticleReaction } from '@/app/article/actions';
 import { toast } from 'sonner';
+import { truncateHtml } from '@/lib/stripHtmlTags';
 
 interface ArticleCardProps {
   article: Article;
@@ -32,11 +33,6 @@ export default function ArticleCard({ article, onClick }: ArticleCardProps) {
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
     return date.toLocaleDateString();
-  };
-
-  const truncateText = (text: string, maxLength: number) => {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + '...';
   };
 
   const getReadingTime = (text: string) => {
@@ -147,7 +143,7 @@ export default function ArticleCard({ article, onClick }: ArticleCardProps) {
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground line-clamp-3 mb-4">
-            {truncateText(article.body, 200)}
+            {truncateHtml(article.body, 200)}
           </p>
           <div className="flex items-center justify-between text-xs sm:text-sm text-muted-foreground w-full">
             <div className="flex items-center gap-1">
