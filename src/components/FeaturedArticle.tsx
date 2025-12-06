@@ -4,7 +4,7 @@ import { useState, useOptimistic, startTransition } from 'react';
 import { Article } from '@/types/article';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, MessageSquare, TrendingUp, BookOpen, Eye, ThumbsUp, ThumbsDown, Pencil, Trash2 } from 'lucide-react';
+import { Clock, MessageSquare, TrendingUp, BookOpen, Eye, HeartIcon, HeartCrackIcon, Pencil, Trash2, ThumbsUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import BookmarkButton from './BookmarkButton';
 import { useAuth } from '@/context/AuthContext';
@@ -169,7 +169,7 @@ export default function FeaturedArticle({ article, onClick }: FeaturedArticlePro
                 handleReaction('like');
               }}
             >
-              <ThumbsUp className={cn("h-4 w-4 sm:h-5 sm:w-5", optimisticState.userReaction === 'like' && "fill-current")} />
+              <HeartIcon className={cn("h-4 w-4 sm:h-5 sm:w-5", optimisticState.userReaction === 'like' && "fill-current")} />
               <span>{optimisticState.likes}</span>
             </div>
             <div
@@ -182,7 +182,7 @@ export default function FeaturedArticle({ article, onClick }: FeaturedArticlePro
                 handleReaction('dislike');
               }}
             >
-              <ThumbsDown className={cn("h-4 w-4 sm:h-5 sm:w-5", optimisticState.userReaction === 'dislike' && "fill-current")} />
+              <HeartCrackIcon className={cn("h-4 w-4 sm:h-5 sm:w-5", optimisticState.userReaction === 'dislike')} />
               <span>{optimisticState.dislikes}</span>
             </div>
             <div onClick={(e) => e.stopPropagation()}>

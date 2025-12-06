@@ -2,7 +2,7 @@
 
 import { useState, useOptimistic, startTransition } from 'react';
 import { Button } from '@/components/ui/button';
-import { ThumbsUp, ThumbsDown } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, HeartIcon, HeartCrackIcon } from 'lucide-react';
 import { Article } from '@/types/article';
 import { toggleArticleReaction } from '@/app/article/actions';
 import { toast } from 'sonner';
@@ -88,7 +88,7 @@ export default function ReactionButtons({ article }: ReactionButtonsProps) {
                     optimisticState.userReaction === 'like' && "text-green-600 bg-green-50"
                 )}
             >
-                <ThumbsUp className={cn("h-4 w-4", optimisticState.userReaction === 'like' && "fill-current")} />
+                <HeartIcon className={cn("h-4 w-4", optimisticState.userReaction === 'like' && "fill-current")} />
                 <span>{optimisticState.likes}</span>
             </Button>
 
@@ -102,7 +102,7 @@ export default function ReactionButtons({ article }: ReactionButtonsProps) {
                     optimisticState.userReaction === 'dislike' && "text-red-600 bg-red-50"
                 )}
             >
-                <ThumbsDown className={cn("h-4 w-4", optimisticState.userReaction === 'dislike' && "fill-current")} />
+                <HeartCrackIcon className={cn("h-4 w-4", optimisticState.userReaction === 'dislike')} />
                 <span>{optimisticState.dislikes}</span>
             </Button>
         </div>

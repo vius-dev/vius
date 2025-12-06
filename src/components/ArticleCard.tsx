@@ -5,7 +5,7 @@ import { Article } from '@/types/article';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, Clock, BookOpen, Pencil, Trash2, ThumbsUp, ThumbsDown, Eye } from 'lucide-react';
+import { MessageSquare, Clock, BookOpen, Pencil, Trash2, Eye, HeartIcon, HeartCrackIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import BookmarkButton from './BookmarkButton';
 import { useAuth } from '@/context/AuthContext';
@@ -177,7 +177,7 @@ export default function ArticleCard({ article, onClick }: ArticleCardProps) {
                 handleReaction('like');
               }}
             >
-              <ThumbsUp className={cn("h-4 w-4 sm:h-5 sm:w-5", optimisticState.userReaction === 'like' && "fill-current")} />
+              <HeartIcon className={cn("h-4 w-4 sm:h-5 sm:w-5", optimisticState.userReaction === 'like' && "fill-current")} />
               <span>{optimisticState.likes}</span>
             </div>
             <div
@@ -190,7 +190,7 @@ export default function ArticleCard({ article, onClick }: ArticleCardProps) {
                 handleReaction('dislike');
               }}
             >
-              <ThumbsDown className={cn("h-4 w-4 sm:h-5 sm:w-5", optimisticState.userReaction === 'dislike' && "fill-current")} />
+              <HeartCrackIcon className={cn("h-4 w-4 sm:h-5 sm:w-5", optimisticState.userReaction === 'dislike')} />
               <span>{optimisticState.dislikes}</span>
             </div>
             <div onClick={(e) => e.stopPropagation()}>

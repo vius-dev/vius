@@ -3,57 +3,75 @@
 import { useState } from 'react';
 import { TextAlignment } from '@/types/article';
 import { useAuth } from '@/context/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PenSquare, CheckCircle2, AlignLeft, AlignCenter, AlignRight, AlignJustify, LogIn } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Separator } from '@/components/ui/separator';
+import {
+  Image as ImageIcon,
+  Hash,
+  AlignLeft,
+  Tags,
+  CheckCircle2,
+  LogIn,
+  PenSquare,
+  Globe,
+  ChevronDown
+} from 'lucide-react';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
 import RichTextEditor from './RichTextEditor';
 import AuthModal from './AuthModal';
-import ImageUpload from './ImageUpload';
 import { uploadArticleImage } from '@/lib/storage';
 import TagInput from './TagInput';
+import { toast } from 'sonner';
 
 interface CreateArticleProps {
   onCreateArticle: (title: string, body: string, section: string, tags: string[], published: boolean, imageUrl?: string, textAlignment?: TextAlignment) => void;
 }
 
 export default function CreateArticle({ onCreateArticle }: CreateArticleProps) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [section, setSection] = useState('politics');
   const [imageUrl, setImageUrl] = useState('');
-  const [uploadedImagePath, setUploadedImagePath] = useState('');
   const [textAlignment, setTextAlignment] = useState<TextAlignment>('left');
   const [tags, setTags] = useState<string[]>([]);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [errors, setErrors] = useState<{ title?: string; body?: string }>({});
+  const [loading, setLoading] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
+  // Tools state
+  const [showTagInput, setShowTagInput] = useState(false);
+
   const validate = () => {
-    const newErrors: { title?: string; body?: string } = {};
-
     if (!title.trim()) {
-      newErrors.title = 'Title is required';
-    } else if (title.trim().length < 10) {
-      newErrors.title = 'Title must be at least 10 characters';
+      toast.error('Please enter a title');
+      return false;
     }
-
+    if (title.trim().length < 5) {
+      toast.error('Title is too short');
+      return false;
+    }
     if (!body.trim()) {
-      newErrors.body = 'Article body is required';
-    } else if (body.trim().length < 50) {
-      newErrors.body = 'Article body must be at least 50 characters';
+      toast.error('Please write some content');
+      return false;
     }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return true;
   };
 
-  const handleSubmit = (e: React.FormEvent, published: boolean = true) => {
-    e.preventDefault();
-
+  const handleSubmit = async (published: boolean = true) => {
     if (!user) {
       setAuthModalOpen(true);
       return;
@@ -61,202 +79,221 @@ export default function CreateArticle({ onCreateArticle }: CreateArticleProps) {
 
     if (!validate()) return;
 
-    onCreateArticle(title, body, section, tags, published, imageUrl || undefined, textAlignment);
-    setTitle('');
-    setBody('');
-    setSection('politics');
-    setImageUrl('');
-    setUploadedImagePath('');
-    setTextAlignment('left');
-    setTags([]);
-    setErrors({});
-    setShowSuccess(true);
+    setLoading(true);
+    try {
+      await onCreateArticle(title, body, section, tags, published, imageUrl || undefined, textAlignment);
 
-    setTimeout(() => setShowSuccess(false), 3000);
+      // Reset form
+      setTitle('');
+      setBody('');
+      setSection('politics');
+      setImageUrl('');
+      setTags([]);
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to post');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const alignmentOptions = [
-    { value: 'left', icon: AlignLeft, label: 'Left' },
-    { value: 'center', icon: AlignCenter, label: 'Center' },
-    { value: 'right', icon: AlignRight, label: 'Right' },
-    { value: 'justify', icon: AlignJustify, label: 'Justify' },
-  ];
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!user || !e.target.files?.[0]) return;
+
+    const file = e.target.files[0];
+    const toastId = toast.loading('Uploading image...');
+
+    try {
+      const result = await uploadArticleImage(file, user.id);
+      if (result) {
+        setImageUrl(result.url);
+        toast.success('Image attached', { id: toastId });
+      } else {
+        toast.error('Upload failed', { id: toastId });
+      }
+    } catch (error) {
+      toast.error('Error uploading image', { id: toastId });
+    }
+  };
 
   if (!user) {
     return (
-      <div className="max-w-4xl mx-auto">
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="flex items-center justify-center gap-2 text-3xl">
-              <PenSquare className="h-8 w-8" />
-              Create New Article
-            </CardTitle>
-            <CardDescription>
-              Sign in to share your political insights and analysis
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center py-12">
-            <LogIn className="h-16 w-16 text-muted-foreground mb-4" />
-            <p className="text-muted-foreground mb-6 text-center">
-              You need to be signed in to create articles.
-            </p>
-            <Button onClick={() => setAuthModalOpen(true)} size="lg">
-              <LogIn className="h-4 w-4 mr-2" />
-              Sign In to Create
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="w-full max-w-2xl mx-auto p-4 border rounded-xl bg-card shadow-sm text-center py-12">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+            <PenSquare className="h-6 w-6" />
+          </div>
+          <h3 className="text-xl font-bold">Sign in to post</h3>
+          <p className="text-muted-foreground max-w-xs mx-auto">
+            Join the conversation and share your perspective with the world.
+          </p>
+          <Button onClick={() => setAuthModalOpen(true)}>
+            <LogIn className="h-4 w-4 mr-2" />
+            Sign In
+          </Button>
+        </div>
         <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
       </div>
     );
   }
 
+  // Get User Initials
+  const initials = profile?.display_name
+    ? profile.display_name.substring(0, 2).toUpperCase()
+    : user.email?.substring(0, 2).toUpperCase() || 'U';
+
   return (
-    <div className="max-w-4xl mx-auto pb-32">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-3xl">
-            <PenSquare className="h-8 w-8" />
-            Create New Article
-          </CardTitle>
-          <CardDescription>
-            Share your political insights and analysis with our readers
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="section">Section</Label>
-                <Select value={section} onValueChange={setSection}>
-                  <SelectTrigger id="section">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="politics">Politics</SelectItem>
-                    <SelectItem value="elections">Elections</SelectItem>
-                    <SelectItem value="analysis">Analysis</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+    <div className="w-full max-w-2xl mx-auto bg-background border rounded-xl shadow-sm overflow-hidden pb-4">
+      <div className="flex p-4 gap-4">
+        <div className="shrink-0">
+          <Avatar className="h-10 w-10">
+            <AvatarImage src={profile?.avatar_url || undefined} />
+            <AvatarFallback>{initials}</AvatarFallback>
+          </Avatar>
+        </div>
 
-              <div className="space-y-2">
-                <Label>Text Alignment</Label>
-                <div className="flex gap-1">
-                  {alignmentOptions.map((option) => {
-                    const Icon = option.icon;
-                    return (
-                      <Button
-                        key={option.value}
-                        type="button"
-                        variant={textAlignment === option.value ? 'default' : 'outline'}
-                        size="icon"
-                        onClick={() => setTextAlignment(option.value as TextAlignment)}
-                        title={option.label}
-                      >
-                        <Icon className="h-4 w-4" />
-                      </Button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="title">Article Title</Label>
-              <Input
-                id="title"
-                placeholder="Enter a compelling headline..."
-                value={title}
-                onChange={(e) => {
-                  setTitle(e.target.value);
-                  if (errors.title) setErrors({ ...errors, title: undefined });
-                }}
-                className={errors.title ? 'border-destructive' : ''}
-              />
-              {errors.title && (
-                <p className="text-sm text-destructive">{errors.title}</p>
-              )}
-            </div>
-
-
-            <ImageUpload
-              label="Featured Image (optional)"
-              currentImageUrl={imageUrl}
-              onUpload={async (file) => {
-                if (!user) return null;
-                const result = await uploadArticleImage(file, user.id);
-                if (result) {
-                  setImageUrl(result.url);
-                  setUploadedImagePath(result.path);
-                }
-                return result;
-              }}
-              onRemove={() => {
-                setImageUrl('');
-                setUploadedImagePath('');
-              }}
+        <div className="flex-1 min-w-0 space-y-4">
+          {/* Inputs */}
+          <div className="space-y-2">
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="What's happening? (Title)"
+              className="text-xl font-bold border-none shadow-none px-0 focus-visible:ring-0 h-auto placeholder:text-muted-foreground/50"
             />
 
-
-            <div className="space-y-2">
-              <Label htmlFor="tags">Tags (optional)</Label>
-              <TagInput
-                value={tags}
-                onChange={setTags}
-                placeholder="Add tags to help readers find your article..."
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="body">Article Body</Label>
+            <div className="min-h-[150px]">
               <RichTextEditor
                 value={body}
-                onChange={(value) => {
-                  setBody(value);
-                  if (errors.body) setErrors({ ...errors, body: undefined });
-                }}
-                placeholder="Write your article content here... Use *italic*, **bold**, and &quot;quotes&quot; for formatting."
-                rows={12}
-                error={!!errors.body}
-                textAlign={textAlignment}
+                onChange={setBody}
+                placeholder="Share your perspective..."
+                className="border-none shadow-none min-h-[150px] p-0 focus-visible:ring-0 [&_.ProseMirror]:px-0"
               />
-              {errors.body && (
-                <p className="text-sm text-destructive">{errors.body}</p>
-              )}
-              <p className="text-sm text-muted-foreground">
-                {body.length} characters
-              </p>
             </div>
 
+            {/* Media Preview */}
+            {imageUrl && (
+              <div className="relative mt-2 rounded-xl overflow-hidden border">
+                <img src={imageUrl} alt="Preview" className="max-h-[300px] w-full object-cover" />
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  className="absolute top-2 right-2 h-8 w-8 rounded-full"
+                  onClick={() => setImageUrl('')}
+                >
+                  <span className="sr-only">Remove</span>
+                  ×
+                </Button>
+              </div>
+            )}
 
-            <div className="flex items-center gap-4">
-              <Button
-                type="button"
-                variant="outline"
-                size="lg"
-                onClick={(e) => handleSubmit(e, false)}
-              >
-                Save as Draft
-              </Button>
-              <Button
-                type="submit"
-                size="lg"
-                onClick={(e) => handleSubmit(e, true)}
-              >
-                Publish Article
-              </Button>
-              {showSuccess && (
-                <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
-                  <CheckCircle2 className="h-5 w-5" />
-                  <span className="font-medium">Article saved successfully!</span>
-                </div>
-              )}
+            {/* Tags Preview */}
+            {tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 pt-2">
+                {tags.map(tag => (
+                  <div key={tag} className="bg-primary/10 text-primary px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                    #{tag}
+                    <button
+                      onClick={() => setTags(tags.filter(t => t !== tag))}
+                      className="hover:text-primary/70"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <Separator />
+
+          {/* Toolbar */}
+          <div className="flex items-center justify-between pt-2">
+            <div className="flex items-center gap-1 text-primary">
+              {/* Image Upload */}
+              <div className="relative">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                  onChange={handleImageUpload}
+                  title="Add Image"
+                />
+                <Button variant="ghost" size="icon" className="h-9 w-9 text-primary hover:text-primary hover:bg-primary/10 rounded-full">
+                  <ImageIcon className="h-5 w-5" />
+                </Button>
+              </div>
+
+              {/* Tags Popover */}
+              <Popover open={showTagInput} onOpenChange={setShowTagInput}>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-9 w-9 text-primary hover:text-primary hover:bg-primary/10 rounded-full">
+                    <Hash className="h-5 w-5" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-3" align="start">
+                  <div className="space-y-2">
+                    <h4 className="font-medium leading-none">Add Tags</h4>
+                    <p className="text-xs text-muted-foreground">Press enter to add a tag</p>
+                    <TagInput
+                      value={tags}
+                      onChange={setTags}
+                      placeholder="politics, news, etc."
+                    />
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              {/* Section Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-9 gap-1 text-primary hover:text-primary hover:bg-primary/10 rounded-full px-3">
+                    <Globe className="h-4 w-4" />
+                    <span className="text-sm font-medium capitalize">{section}</span>
+                    <ChevronDown className="h-3 w-3 opacity-50" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <DropdownMenuItem onClick={() => setSection('politics')}>Politics</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSection('elections')}>Elections</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSection('analysis')}>Analysis</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-          </form>
-        </CardContent>
-      </Card>
-      <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
+
+            <div className="flex items-center gap-3">
+              {/* Character Count could go here */}
+              <div className="py-2 border-l pl-3"></div>
+
+              <Button
+                variant="ghost"
+                className="rounded-full text-muted-foreground hover:text-foreground"
+                onClick={() => handleSubmit(false)}
+                disabled={loading || !title || !body}
+              >
+                Draft
+              </Button>
+
+              <Button
+                className="rounded-full px-6 font-bold"
+                onClick={() => handleSubmit(true)}
+                disabled={loading || !title || !body}
+              >
+                {loading ? 'Posting...' : 'Post'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {showSuccess && (
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 bg-green-600 text-white px-6 py-2 rounded-full shadow-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-4">
+          <CheckCircle2 className="h-4 w-4" />
+          Posted successfully!
+        </div>
+      )}
     </div>
   );
 }

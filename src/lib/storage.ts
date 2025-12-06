@@ -75,6 +75,7 @@ export async function uploadArticleImage(file: File, userId: string): Promise<{ 
         const filePath = generateFileName(userId, file.name);
 
         // Upload to Supabase Storage
+        console.log('Uploading to bucket: article_images');
         const { data, error } = await supabase.storage
             .from('article_images')
             .upload(filePath, compressedFile, {
