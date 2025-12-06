@@ -117,7 +117,7 @@ function PageContent() {
       }
 
       setTimeout(() => {
-        setActiveSection(section as SectionId);
+        setActiveSection('top-stories');
       }, 1500);
     } catch (error) {
       console.error('Error creating article:', error);

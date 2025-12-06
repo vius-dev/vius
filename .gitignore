@@ -31,6 +31,9 @@ yarn-error.log*
 
 # local env files
 .env*.local
+.env.development
+.env.production
+.env.test
 .env
 
 # vercel
@@ -45,5 +48,3 @@ next-env.d.ts
 
 .github/
 
-# Supabase migrations
-/supabase/migrations/
